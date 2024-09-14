@@ -1,5 +1,5 @@
-# Aapt2 package build workflow
+# Aapt2 包构建工作流
 
-[![build workflow](https://github.com/revanced/aapt2/actions/workflows/build.yml/badge.svg)](https://github.com/revanced/aapt2/actions/workflows/build.yml)
+[![build workflow](https://github.com/9gwk/aapt2/actions/workflows/build.yml/badge.svg)](https://github.com/9gwk/aapt2/actions/workflows/build.yml)
 
-This repository contains a workflow to build the aapt2 binaries for Android.
+该存储库包含用于构建 Android 的 aapt2 二进制文件的工作流程。
