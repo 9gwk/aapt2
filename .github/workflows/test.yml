@@ -1,0 +1,57 @@
+name: 每日构建 arm_adb
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天午夜运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: 安装依赖
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libtool automake
+        sudo apt-get install -y linux-libc-dev-armhf-cross libc6-armhf-cross libc6-dev-armhf-cross
+        sudo apt-get install -y linux-libc-dev-arm64-cross libc6-arm64-cross libc6-dev-arm64-cross
+
+    - name: 编译 OpenSSL
+      run: |
+        git clone https://github.com/qhuyduong/openssl-1.0.2l.git
+        cd openssl-1.0.2l/
+        ./Configure --prefix=/tmp/openssl os/compiler:gcc
+        make && make install
+        cd ..
+
+    - name: 编译 arm_adb
+      run: |
+        ./configure --includedir=/tmp/openssl/include --libdir=/tmp/openssl/lib
+        make
+
+    - name: 交叉编译 OpenSSL (ARM)
+      run: |
+        cd openssl-1.0.2l/
+        ./Configure --prefix=/tmp/openssl-arm os/compiler:arm-linux-gnueabihf-gcc
+        make && make install
+        cd ..
+
+    - name: 交叉编译 arm_adb (ARM)
+      run: |
+        ./configure --host=arm-linux-gnueabihf --includedir=/tmp/openssl-arm/include --libdir=/tmp/openssl-arm/lib
+        make
+
+    - name: 运行自动修复（如果需要）
+      run: autoreconf -i --force
+
+    - name: 上传构建产物
+      uses: actions/upload-artifact@v2
+      with:
+        name: arm_adb-builds
+        path: |
+          adb
+          adb_arm
+
