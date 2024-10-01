@@ -1,0 +1,46 @@
+name: Build arm_adb for ARM64
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout source code
+      uses: actions/checkout@v2
+
+    # Set up ARM64 cross-compilation environment
+    - name: Install dependencies for ARM64 cross-compiling
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libtool automake linux-libc-dev-arm64-cross libc6-arm64-cross libc6-dev-arm64-cross gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+    # Cross-compile OpenSSL for ARM64
+    - name: Cross-compile OpenSSL for ARM64
+      run: |
+        git clone https://github.com/qhuyduong/openssl-1.0.2l.git
+        cd openssl-1.0.2l/
+        ./Configure --prefix=/tmp/openssl os/compiler:aarch64-linux-gnu-gcc
+        make CC=aarch64-linux-gnu-gcc && make install
+        cd -
+
+    # Cross-compile arm_adb for ARM64
+    - name: Cross-compile arm_adb for ARM64
+      run: |
+        git clone https://github.com/qhuyduong/arm_adb.git
+        cd arm_adb
+        ./configure --host=aarch64-linux-gnu --includedir=/tmp/openssl/include --libdir=/tmp/openssl/lib
+        make
+
+    # Optional: Archive build artifacts
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: arm_adb_build
+        path: arm_adb/
